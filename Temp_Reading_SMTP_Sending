@@ -62,53 +62,54 @@ uint8_t WiFiConnect(const char* nSSID = nullptr, const char* nPassword = nullptr
 // Ensuring establishment of WiFi connection
 void Awaits()
 {
-uint32_t ts = millis();
-while(!connection_state)
-{
-delay(50);
-if(millis() > (ts + reconnect_interval) && !connection_state) {
-           	connection_state = WiFiConnect();
-           	ts = millis();
-      	}
-     }
+	uint32_t ts = millis();
+	while(!connection_state)
+	{
+		delay(50);
+		if(millis() > (ts + reconnect_interval) && !connection_state) {
+           		connection_state = WiFiConnect();
+           		ts = millis();
+      		}
+     	}
 }
 
 void setup(void) 
 { 
-// start serial port for temperature probe
-Serial.begin(9600); 
-// Start up the temp probe
-sensors.begin();
-// start serial port for WiFi module
-Serial.begin(115200);
-// Begin connection to WiFi
-connection_state = WiFiConnect();
-// Constant attempt to connect to WiFi
-if(!connection_state){
-Awaits();
-}
-Gsender *gsender = Gsender::Instance();
-String subject = "Turtle Temp Monitor Starting Up";
-// Send initial test message to confirm working
-gsender->Subject(subject)->Send("wellsturtling@gmail.com", "Turtle Temp - Initiated");
-// Reset subject line
-String subject = “Turtle Temp Alert”;
+	// start serial port for temperature probe
+	Serial.begin(9600); 
+	// Start up the temp probe
+	sensors.begin();
+	// start serial port for WiFi module
+	Serial.begin(115200);
+	// Begin connection to WiFi
+	connection_state = WiFiConnect();
+	// Constant attempt to connect to WiFi
+	if(!connection_state) {
+		Awaits();
+	}
+	Gsender *gsender = Gsender::Instance();
+	String subject = "Turtle Temp Monitor Starting Up";
+	// Send initial test message to confirm working
+	gsender->Subject(subject)->Send("wellsturtling@gmail.com", "Turtle Temp - Initiated");
+	// Reset subject line
+	String subject = “Turtle Temp Alert”;
 } 
 
 void loop(void)
 { 
-// Get temperature reading
-sensors.requestTemperatures();
-// Get temperature reading in Celsius from first IC on wire
-const float tempC = sensors.getTempCByIndex(0);
-// If temperature goes out of regulation, send alert email
-if (tempC < 23.9 || tempC > 32) {
-	if (tempC < 23.9) {
-	gsender->Subject(subject)->Send("boris.on@live.com", "Low Temp Alert: " + tempC);
-} else {
-	gsender->Subject(subject)->Send("boris.on@live.com", "High Temp Alert: " + tempC);
+	// Get temperature reading
+	sensors.requestTemperatures();
+	// Get temperature reading in Celsius from first IC on wire
+	const float tempC = sensors.getTempCByIndex(0);
+	// If temperature goes out of regulation, send alert email
+	if (tempC < 23.9 || tempC > 32) {
+		if (tempC < 23.9) {
+			gsender->Subject(subject)->Send("boris.on@live.com", "Low Temp Alert: " + tempC);
+		} else {
+			gsender->Subject(subject)->Send("boris.on@live.com", "High Temp Alert: " + tempC);
+		}
+	}
+	// Delay reading by 3 hrs
+	delay(10800000);
 }
-}
-// Delay reading by 3 hrs
-delay(10800000);
-}
+
